@@ -1,7 +1,6 @@
 (function () {
-
   var COMPONENTS_BASE = 'components/';
-  var COMPONENT_NAMES = ['header', 'sidebar', 'drawer', 'search', 'footer', 'back-to-top'];
+  var COMPONENT_NAMES = ['header', 'sidebar', 'drawer', 'search', 'footer'];
 
   function loadComponent(name) {
     return fetch(COMPONENTS_BASE + name + '.html')
@@ -158,37 +157,14 @@
     });
   }
 
-  function autoExpandCurrent() {
-    var path = window.location.pathname;
-
-    var subjectsPaths = ['/subjects/nepali', '/subjects/english'];
-    var grammarPaths = ['/grammar/english', '/grammar/nepali', '/grammar'];
-
-    if (subjectsPaths.some(function (p) { return path.indexOf(p) === 0; })) {
-      var sub = document.querySelector('.nav-sub[data-sub="subjects"]');
-      var grp = document.querySelector('.nav-group[data-group="subjects"]');
-      if (sub) sub.setAttribute('data-open', 'true');
-      if (grp) grp.setAttribute('aria-expanded', 'true');
-    }
-
-    if (grammarPaths.some(function (p) { return path.indexOf(p) === 0; })) {
-      var sub2 = document.querySelector('.nav-sub[data-sub="grammar"]');
-      var grp2 = document.querySelector('.nav-group[data-group="grammar"]');
-      if (sub2) sub2.setAttribute('data-open', 'true');
-      if (grp2) grp2.setAttribute('aria-expanded', 'true');
-    }
-  }
-
   function markActive() {
     var path = window.location.pathname.replace(/\.html$/, '').replace(/\/$/, '') || '/';
-
     document.querySelectorAll('.nav-item[data-nav]').forEach(function (item) {
       item.classList.remove('active');
     });
 
     var match = null;
-
-    if (path === '/' || path.indexOf('/pragyaroot') !== -1 && path.replace('/pragyaroot', '') === '') {
+    if (path === '/' || path === '/index') {
       match = 'home';
     } else if (path.indexOf('/subjects/nepali') !== -1) {
       match = 'nepali';
@@ -296,20 +272,19 @@
     var mobileBtn = document.getElementById('mobileSearchBtn');
 
     if (input && results) {
-  input.addEventListener('input', function () {
-    var q = input.value.trim();
-    if (!q) {
-      results.hidden = true;
-      results.innerHTML = '';
-      return;
-    }
-    
-    loadSearchIndex().then(function() {
-      var matches = runSearch(q);
-      renderResults(results, matches, q);
-      results.hidden = false;
-    });
-  });
+      input.addEventListener('input', function () {
+        var q = input.value.trim();
+        if (!q) {
+          results.hidden = true;
+          results.innerHTML = '';
+          return;
+        }
+        loadSearchIndex().then(function() {
+          var matches = runSearch(q);
+          renderResults(results, matches, q);
+          results.hidden = false;
+        });
+      });
 
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
@@ -344,6 +319,12 @@
       panelClose.addEventListener('click', closePanel);
     }
 
+    if (panel) {
+      panel.addEventListener('click', function (e) {
+        if (e.target.closest('[data-close]')) closePanel();
+      });
+    }
+
     function closePanel() {
       if (panel) panel.hidden = true;
       if (panelInput) panelInput.value = '';
@@ -362,40 +343,38 @@
     });
 
     if (panelInput && panelResults) {
-  panelInput.addEventListener('input', function () {
-    var q = panelInput.value.trim();
-    if (!q) {
-      panelResults.innerHTML =
-        '<div class="search-empty">' +
-        '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>' +
-        '<p>Start typing to search across grammar, notes and solutions.</p>' +
-        '</div>';
-      return;
+      panelInput.addEventListener('input', function () {
+        var q = panelInput.value.trim();
+        if (!q) {
+          panelResults.innerHTML =
+            '<div class="search-empty">' +
+            '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>' +
+            '<p>Start typing to search across grammar, notes and solutions.</p>' +
+            '</div>';
+          return;
+        }
+        loadSearchIndex().then(function() {
+          var matches = runSearch(q, 12);
+          renderResults(panelResults, matches, q);
+        });
+      });
     }
-    
-    loadSearchIndex().then(function() {
-      var matches = runSearch(q, 12);
-      renderResults(panelResults, matches, q);
-    });
-  });
-}
   }
 
-  function initBackToTop() {
-    var btn = document.getElementById('backToTop');
-    if (!btn) return;
+  function initRevealAnimations() {
+    var reveals = document.querySelectorAll('.reveal');
+    if (!reveals.length) return;
 
-    function onScroll() {
-      if (window.scrollY > 400) btn.classList.add('visible');
-      else btn.classList.remove('visible');
-    }
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1 });
 
-    window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll();
-
-    btn.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    });
+    reveals.forEach(function (el) { observer.observe(el); });
   }
 
   function init() {
@@ -404,9 +383,8 @@
     initDrawer();
     initNavGroups();
     markActive();
-    autoExpandCurrent();
-    initBackToTop();
     initSearch();
+    initRevealAnimations();
   }
 
   Promise.all(COMPONENT_NAMES.map(loadComponent)).then(init);
