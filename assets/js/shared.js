@@ -362,20 +362,23 @@
     });
 
     if (panelInput && panelResults) {
-      panelInput.addEventListener('input', function () {
-        var q = panelInput.value.trim();
-        if (!q) {
-          panelResults.innerHTML =
-            '<div class="search-empty">' +
-            '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>' +
-            '<p>Start typing to search across grammar, notes and solutions.</p>' +
-            '</div>';
-          return;
-        }
-        var matches = runSearch(q, 12);
-        renderResults(panelResults, matches, q);
-      });
+  panelInput.addEventListener('input', function () {
+    var q = panelInput.value.trim();
+    if (!q) {
+      panelResults.innerHTML =
+        '<div class="search-empty">' +
+        '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>' +
+        '<p>Start typing to search across grammar, notes and solutions.</p>' +
+        '</div>';
+      return;
     }
+    
+    loadSearchIndex().then(function() {
+      var matches = runSearch(q, 12);
+      renderResults(panelResults, matches, q);
+    });
+  });
+}
   }
 
   function initBackToTop() {
