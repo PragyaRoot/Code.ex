@@ -296,17 +296,20 @@
     var mobileBtn = document.getElementById('mobileSearchBtn');
 
     if (input && results) {
-      input.addEventListener('input', function () {
-        var q = input.value.trim();
-        if (!q) {
-          results.hidden = true;
-          results.innerHTML = '';
-          return;
-        }
-        var matches = runSearch(q);
-        renderResults(results, matches, q);
-        results.hidden = false;
-      });
+  input.addEventListener('input', function () {
+    var q = input.value.trim();
+    if (!q) {
+      results.hidden = true;
+      results.innerHTML = '';
+      return;
+    }
+    
+    loadSearchIndex().then(function() {
+      var matches = runSearch(q);
+      renderResults(results, matches, q);
+      results.hidden = false;
+    });
+  });
 
       input.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
