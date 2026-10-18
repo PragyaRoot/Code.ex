@@ -3,9 +3,10 @@
   viewBox="0 0 1000 1000"
   role="img"
   aria-labelledby="logoTitle"
-  fill="currentColor"
+  fill="#000"
   overflow="visible"
   preserveAspectRatio="xMinYMid meet"
+  style="display:block; width:auto; height:auto;"
 >
   <title id="logoTitle">Logo</title>
 
